@@ -198,11 +198,21 @@
             }
         });
 
+        // Updated updateInputDisplay function with bounds checking
         function updateInputDisplay() {
             const startIdx = attempts * 5;
+            const boxes = document.querySelectorAll(".box");
+
+            if (startIdx + 5 > boxes.length) {
+                console.error("Attempting to access out-of-bounds box element.");
+                return;
+            }
+
             for (let i = 0; i < 5; i++) {
-                const box = document.querySelectorAll(".box")[startIdx + i];
-                box.textContent = currentGuess[i] || '';
+                const box = boxes[startIdx + i];
+                if (box) {
+                    box.textContent = currentGuess[i] || '';
+                }
             }
         }
 
@@ -277,43 +287,42 @@
                             keyElement.style.backgroundColor = 'yellow';
                         } else {
                             keyElement.style.backgroundColor = 'red';
-                            keyElement.style.color = 'white';
                         }
                     }
                 }
             });
         }
 
+        function resetGame() {
+            attempts = 0;
+            currentGuess = '';
+            previousGuesses = [];
+            document.querySelectorAll('.box').forEach(box => {
+                box.textContent = '';
+                box.classList.remove('correct', 'present', 'absent');
+            });
+            document.querySelectorAll('.key').forEach(key => {
+                key.style.backgroundColor = '';
+            });
+            fetchNewWord();
+            message.textContent = '';
+            answerElement.style.display = 'none';
+            playAgainButton.style.display = 'none';
+        }
+
         function triggerConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
             for (let i = 0; i < 100; i++) {
                 const confetti = document.createElement('div');
                 confetti.classList.add('confetti');
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
                 document.body.appendChild(confetti);
 
                 setTimeout(() => {
                     confetti.remove();
                 }, 2000);
             }
-        }
-
-        function resetGame() {
-            attempts = 0;
-            previousGuesses = [];
-            currentGuess = '';
-            document.querySelectorAll('.box').forEach(box => {
-                box.classList.remove('correct', 'present', 'absent');
-                box.textContent = '';
-            });
-            document.querySelectorAll('.key').forEach(key => {
-                key.style.backgroundColor = '#e0e0e0';
-                key.style.color = 'black';
-            });
-            message.textContent = '';
-            answerElement.style.display = 'none';
-            playAgainButton.style.display = 'none';
-            fetchNewWord();
         }
     </script>
 </body>
