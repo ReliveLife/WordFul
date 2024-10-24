@@ -15,6 +15,7 @@
             justify-content: center;
             height: 100vh;
             background-color: #f4f4f4;
+            position: relative; /* Added to position the version counter */
         }
         #grid {
             display: grid;
@@ -87,6 +88,14 @@
                 opacity: 0;
             }
         }
+        /* Version counter style */
+        #version {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -95,6 +104,9 @@
     <div id="keyboard"></div>
     <div id="answer">The word was: <span id="target-word"></span></div>
     <button id="play-again">Play Again</button>
+    
+    <!-- Version counter -->
+    <div id="version">V1.0.0</div>
 
     <script>
         let targetWord = ''; 
