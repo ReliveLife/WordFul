@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordtorgle</title>
+    <h1>Wordtorgle</h1>
+    <h3>By GunFull.fun</h3>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            grid-gap: 5px;
+            margin-bottom: 20px;
+        }
+        .box {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .correct {
+            background-color: green;
+            color: white;
+        }
+        .present {
+            background-color: yellow;
+        }
+        .absent {
+            background-color: red;
+            color: white;
+        }
+        #keyboard {
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-gap: 5px;
+            margin-bottom: 20px;
+        }
+        .key {
+            width: 30px;
+            height: 30px;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+        .key:hover {
+            background-color: #d0d0d0;
+        }
+        #message {
+            margin: 20px;
+        }
+        #answer {
+            display: none;
+            margin-top: 20px;
+        }
+        #play-again {
+            display: none;
+            margin-top: 10px;
+        }
+        .confetti {
+            position: absolute;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            animation: fall 2s linear infinite;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="grid"></div>
+    <div id="message"></div>
+    <div id="keyboard"></div>
+    <div id="answer">The word was: <span id="target-word"></span></div>
+    <button id="play-again">Play Again</button>
+
+    <script>
+        let targetWord = ''; 
+        const maxAttempts = 6; 
+        let attempts = 0; 
+        const keyboardKeys = 'qwertyuiopasdfghjklzxcvbnm'.split('');
+        let currentGuess = '';
+        let wordList = [];
+        let previousGuesses = [];
+
+        const grid = document.getElementById("grid");
+        const message = document.getElementById("message");
+        const keyboard = document.getElementById("keyboard");
+        const answerElement = document.getElementById("answer");
+        const targetWordElement = document.getElementById("target-word");
+        const playAgainButton = document.getElementById("play-again");
+
+        for (let i = 0; i < maxAttempts * 5; i++) {
+            const box = document.createElement("div");
+            box.classList.add("box");
+            grid.appendChild(box);
+        }
+
+        function createKeyboard() {
+            keyboardKeys.forEach(letter => {
+                const key = document.createElement('div');
+                key.classList.add('key');
+                key.textContent = letter;
+                key.id = `key-${letter}`;
+                keyboard.appendChild(key);
+                key.addEventListener('click', () => {
+                    if (currentGuess.length < 5) {
+                        currentGuess += letter;
+                        updateInputDisplay();
+                    }
+                });
+            });
+
+            const enterKey = document.createElement('div');
+            enterKey.classList.add('key');
+            enterKey.textContent = '⏎';
+            enterKey.addEventListener('click', submitGuess);
+            keyboard.appendChild(enterKey);
+
+            const deleteKey = document.createElement('div');
+            deleteKey.classList.add('key');
+            deleteKey.textContent = '⌫';
+            deleteKey.addEventListener('click', () => {
+                if (currentGuess.length > 0) {
+                    currentGuess = currentGuess.slice(0, -1);
+                    updateInputDisplay();
+                }
+            });
+            keyboard.appendChild(deleteKey);
+        }
+
+        function fetchNewWord() {
+            fetch('https://raw.githubusercontent.com/ReliveLife/WordFul/refs/heads/main/Words')
+                .then(response => response.text())
+                .then(data => {
+                    wordList = data.split("\n").map(word => word.trim().toLowerCase());
+                    targetWord = wordList[Math.floor(Math.random() * wordList.length)];
+                    targetWordElement.textContent = targetWord;
+                })
+                .catch(error => {
+                    message.textContent = 'Failed to load words. Please try again later.';
+                });
+        }
+
+        fetchNewWord();
+        createKeyboard();
+
+        playAgainButton.addEventListener("click", resetGame);
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            if (keyboardKeys.includes(key)) {
+                if (currentGuess.length < 5) {
+                    currentGuess += key;
+                    updateInputDisplay();
+                }
+            } else if (key === 'enter') {
+                submitGuess();
+            } else if (key === 'backspace') {
+                if (currentGuess.length > 0) {
+                    currentGuess = currentGuess.slice(0, -1);
+                    updateInputDisplay();
+                }
+            }
+        });
+
+        function updateInputDisplay() {
+            const startIdx = attempts * 5;
+            for (let i = 0; i < 5; i++) {
+                const box = document.querySelectorAll(".box")[startIdx + i];
+                box.textContent = currentGuess[i] || '';
+            }
+        }
+
+        function submitGuess() {
+            if (currentGuess.length !== 5) {
+                message.textContent = 'Please enter a 5-letter word!';
+                return;
+            }
+            if (previousGuesses.includes(currentGuess)) {
+                message.textContent = 'You already guessed that word!';
+                return;
+            }
+            if (!wordList.includes(currentGuess)) {
+                message.textContent = 'That word is not in the list!';
+                return;
+            }
+
+            previousGuesses.push(currentGuess);
+            const boxes = document.querySelectorAll('.box');
+
+            let letterCount = {};
+            for (let i = 0; i < 5; i++) {
+                if (currentGuess[i] === targetWord[i]) {
+                    boxes[attempts * 5 + i].classList.add('correct');
+                } else {
+                    letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
+                }
+            }
+
+            for (let i = 0; i < 5; i++) {
+                if (currentGuess[i] !== targetWord[i] && targetWord.includes(currentGuess[i]) && letterCount[currentGuess[i]] > 0) {
+                    boxes[attempts * 5 + i].classList.add('present');
+                    letterCount[currentGuess[i]]--;
+                } else if (!targetWord.includes(currentGuess[i])) {
+                    boxes[attempts * 5 + i].classList.add('absent');
+                }
+            }
+
+            updateKeyboardColors();
+            
+            if (currentGuess === targetWord) {
+                message.textContent = `You win! 🎉`;
+                playAgainButton.style.display = 'block';
+                answerElement.style.display = 'block';
+                targetWordElement.textContent = targetWord;
+                triggerConfetti();
+            } else {
+                attempts++;
+                currentGuess = '';
+                updateInputDisplay();
+            }
+
+            if (attempts >= maxAttempts && currentGuess !== targetWord) {
+                message.textContent = `Game Over! The word was: ${targetWord}`;
+                playAgainButton.style.display = 'block';
+                answerElement.style.display = 'block';
+                targetWordElement.textContent = targetWord;
+            }
+        }
+
+        function updateKeyboardColors() {
+            previousGuesses.forEach(guess => {
+                for (let letter of guess) {
+                    const keyElement = document.getElementById(`key-${letter}`);
+                    if (keyElement) {
+                        if (targetWord.includes(letter) && letter === targetWord[guess.indexOf(letter)]) {
+                            keyElement.style.backgroundColor = 'green';
+                        } else if (targetWord.includes(letter)) {
+                            keyElement.style.backgroundColor = 'yellow';
+                        } else {
+                            keyElement.style.backgroundColor = 'red';
+                            keyElement.style.color = 'white';
+                        }
+                    }
+                }
+            });
+        }
+
+        function triggerConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                document.body.appendChild(confetti);
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = ['red', 'blue', 'green', 'yellow', 'purple'][Math.floor(Math.random() * 5)];
+                confetti.style.animationDuration = Math.random() * 2 + 2 + 's';
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+        function resetGame() {
+            attempts = 0;
+            previousGuesses = [];
+            currentGuess = '';
+            message.textContent = '';
+            answerElement.style.display = 'none';
+            playAgainButton.style.display = 'none';
+            const boxes = document.querySelectorAll('.box');
+            boxes.forEach(box => {
+                box.textContent = '';
+                box.classList.remove('correct', 'present', 'absent');
+            });
+            fetchNewWord();
+            const keyElements = document.querySelectorAll('.key');
+            keyElements.forEach(key => {
+                key.style.backgroundColor = '#e0e0e0';
+                key.style.color = 'black';
+            });
+        }
+    </script>
+</body>
+</html>
