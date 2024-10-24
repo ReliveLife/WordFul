@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordtorgle</title>
-    <h1>Wordtorgle</h1>
-    <h3>By GunFull.fun</h3>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,6 +15,10 @@
             background-color: #f4f4f4;
             position: relative;
             transform: scale(0.8); /* Scale everything to 80% */
+            overflow: hidden; /* Prevent scrolling */
+        }
+        h1 {
+            margin-bottom: 0.0000001px; /* Adjust margin to bring h1 and h3 closer */
         }
         #grid {
             display: grid;
@@ -97,24 +99,17 @@
                 opacity: 0; /* Fade out at the end */
             }
         }
-        #version {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            font-size: 22px;
-            color: #666;
-        }
     </style>
 </head>
 <body>
+    <h1>Wordtorgle</h1>
+    <h3>By GunFull.fun</h3>
+
     <div id="grid"></div>
     <div id="message"></div>
     <div id="keyboard"></div>
     <div id="answer">The word was: <span id="target-word"></span></div>
     <button id="play-again">Play Again</button>
-    
-    <!-- Version counter -->
-    <div id="version"></div>
 
     <script>
         let targetWord = ''; 
@@ -258,41 +253,38 @@
                 }
             }
 
-            updateKeyboardColors();
-            
+            attempts++;
+            message.textContent = '';
+
             if (currentGuess === targetWord) {
-                message.textContent = `You win! 🎉`;
+                message.textContent = 'Congratulations! You guessed the word!';
+                playAgainButton.style.display = 'block';
+                triggerConfetti();
+            } else if (attempts === maxAttempts) {
+                message.textContent = `Game over! The word was: ${targetWord}`;
                 playAgainButton.style.display = 'block';
                 answerElement.style.display = 'block';
                 targetWordElement.textContent = targetWord;
-                triggerConfetti();
-                return;
             }
 
-            attempts++;
             currentGuess = '';
             updateInputDisplay();
-
-            if (attempts >= maxAttempts) {
-                message.textContent = `Game Over! The word was: ${targetWord}`;
-                playAgainButton.style.display = 'block';
-                answerElement.style.display = 'block';
-                targetWordElement.textContent = targetWord;
-            }
         }
 
         function updateKeyboardColors() {
-            currentGuess.split('').forEach((letter, index) => {
-                const keyElement = document.getElementById(`key-${letter}`);
-                if (keyElement) {
-                    if (currentGuess[index] === targetWord[index]) {
-                        keyElement.style.backgroundColor = 'green';
-                    } else if (targetWord.includes(letter)) {
-                        keyElement.style.backgroundColor = 'yellow';
-                    } else {
-                        keyElement.style.backgroundColor = 'grey';
+            previousGuesses.forEach(guess => {
+                guess.split('').forEach((letter, index) => {
+                    const keyElement = document.getElementById(`key-${letter}`);
+                    if (keyElement) {
+                        if (targetWord[index] === letter) {
+                            keyElement.style.backgroundColor = 'green';
+                        } else if (targetWord.includes(letter)) {
+                            keyElement.style.backgroundColor = 'yellow';
+                        } else {
+                            keyElement.style.backgroundColor = 'grey';
+                        }
                     }
-                }
+                });
             });
         }
 
@@ -300,34 +292,40 @@
             attempts = 0;
             currentGuess = '';
             previousGuesses = [];
-            fetchNewWord();
             message.textContent = '';
             answerElement.style.display = 'none';
             playAgainButton.style.display = 'none';
-            document.querySelectorAll('.box').forEach(box => {
-                box.textContent = '';
+
+            const boxes = document.querySelectorAll('.box');
+            boxes.forEach(box => {
                 box.classList.remove('correct', 'present', 'absent');
+                box.textContent = '';
             });
-            document.querySelectorAll('.key').forEach(key => {
-                key.style.backgroundColor = '';
+
+            keyboardKeys.forEach(letter => {
+                const key = document.getElementById(`key-${letter}`);
+                if (key) {
+                    key.style.backgroundColor = '#e0e0e0';
+                }
             });
+
+            fetchNewWord();
         }
 
         function triggerConfetti() {
-            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
             for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.classList.add('confetti');
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.left = Math.random() * window.innerWidth + 'px';
-                confetti.style.animationDelay = `${Math.random() * 2}s`;
-                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-                document.body.appendChild(confetti);
-
-                setTimeout(() => {
-                    confetti.remove();
-                }, 4000);
+                createConfetti();
             }
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = `${Math.random() * 100}vw`; // Random horizontal position
+            document.body.appendChild(confetti);
+            setTimeout(() => {
+                confetti.remove(); // Remove the confetti after animation
+            }, 4000);
         }
     </script>
 </body>
