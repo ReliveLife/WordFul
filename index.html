@@ -82,20 +82,19 @@
             top: -10px; /* Start just above the screen */
             width: 10px;
             height: 10px;
-            background-color: red;
             opacity: 0; /* Initially invisible */
             animation: fall 4s ease-out forwards;
         }
         @keyframes fall {
             0% {
-                transform: translateY(0);
+                transform: translateY(0) translateX(0);
                 opacity: 0; /* Start invisible */
             }
             10% {
                 opacity: 1; /* Becomes visible as they start falling */
             }
             100% {
-                transform: translateY(100vh);
+                transform: translateY(100vh) translateX(calc(var(--offset) * 1vw));
                 opacity: 0; /* Fade out at the end */
             }
         }
@@ -259,7 +258,7 @@
             if (currentGuess === targetWord) {
                 message.textContent = 'Congratulations! You guessed the word!';
                 playAgainButton.style.display = 'block';
-                triggerConfetti();
+                triggerConfetti(); // Trigger confetti on win
             } else if (attempts === maxAttempts) {
                 message.textContent = `Game over! The word was: ${targetWord}`;
                 playAgainButton.style.display = 'block';
@@ -269,23 +268,6 @@
 
             currentGuess = '';
             updateInputDisplay();
-        }
-
-        function updateKeyboardColors() {
-            previousGuesses.forEach(guess => {
-                guess.split('').forEach((letter, index) => {
-                    const keyElement = document.getElementById(`key-${letter}`);
-                    if (keyElement) {
-                        if (targetWord[index] === letter) {
-                            keyElement.style.backgroundColor = 'green';
-                        } else if (targetWord.includes(letter)) {
-                            keyElement.style.backgroundColor = 'yellow';
-                        } else {
-                            keyElement.style.backgroundColor = 'grey';
-                        }
-                    }
-                });
-            });
         }
 
         function resetGame() {
@@ -313,15 +295,20 @@
         }
 
         function triggerConfetti() {
+            const colors = ['#FFC700', '#FF1E00', '#00FF1E', '#007BFF', '#FF007B']; // Different confetti colors
             for (let i = 0; i < 100; i++) {
-                createConfetti();
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const delay = Math.random() * 2000; // Random delay up to 2 seconds
+                setTimeout(() => createConfetti(color), delay);
             }
         }
 
-        function createConfetti() {
+        function createConfetti(color) {
             const confetti = document.createElement('div');
             confetti.classList.add('confetti');
+            confetti.style.backgroundColor = color; // Set the confetti color
             confetti.style.left = `${Math.random() * 100}vw`; // Random horizontal position
+            confetti.style.setProperty('--offset', Math.random() * 10 - 5); // Add a slight horizontal sway
             document.body.appendChild(confetti);
             setTimeout(() => {
                 confetti.remove(); // Remove the confetti after animation
