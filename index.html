@@ -15,7 +15,8 @@
             justify-content: center;
             height: 100vh;
             background-color: #f4f4f4;
-            position: relative; /* Added to position the version counter */
+            position: relative;
+            transform: scale(0.8); /* Scale everything to 80% */
         }
         #grid {
             display: grid;
@@ -75,25 +76,32 @@
             margin-top: 10px;
         }
         .confetti {
-            position: absolute;
-            top: 0;
+            position: fixed; /* Ensures confetti is on a separate layer and doesn't affect layout */
+            top: -10px; /* Start just above the screen */
             width: 10px;
             height: 10px;
             background-color: red;
-            animation: fall 2s linear infinite;
+            opacity: 0; /* Initially invisible */
+            animation: fall 4s ease-out forwards;
         }
         @keyframes fall {
-            to {
+            0% {
+                transform: translateY(0);
+                opacity: 0; /* Start invisible */
+            }
+            10% {
+                opacity: 1; /* Becomes visible as they start falling */
+            }
+            100% {
                 transform: translateY(100vh);
-                opacity: 0;
+                opacity: 0; /* Fade out at the end */
             }
         }
-        /* Version counter style */
         #version {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            font-size: 12px;
+            bottom: 20px;
+            left: 20px;
+            font-size: 22px;
             color: #666;
         }
     </style>
@@ -106,7 +114,7 @@
     <button id="play-again">Play Again</button>
     
     <!-- Version counter -->
-    <div id="version">V1.0.2</div>
+    <div id="version"></div>
 
     <script>
         let targetWord = ''; 
@@ -198,7 +206,6 @@
             }
         });
 
-        // Updated updateInputDisplay function with bounds checking
         function updateInputDisplay() {
             const startIdx = attempts * 5;
             const boxes = document.querySelectorAll(".box");
@@ -216,7 +223,6 @@
             }
         }
 
-        // Updated submitGuess function
         function submitGuess() {
             if (currentGuess.length !== 5) {
                 message.textContent = 'Please enter a 5-letter word!';
@@ -260,14 +266,13 @@
                 answerElement.style.display = 'block';
                 targetWordElement.textContent = targetWord;
                 triggerConfetti();
-                return; // Stop execution if player wins
+                return;
             }
 
             attempts++;
             currentGuess = '';
             updateInputDisplay();
 
-            // Check for loss condition AFTER updating attempts
             if (attempts >= maxAttempts) {
                 message.textContent = `Game Over! The word was: ${targetWord}`;
                 playAgainButton.style.display = 'block';
@@ -277,17 +282,15 @@
         }
 
         function updateKeyboardColors() {
-            previousGuesses.forEach(guess => {
-                for (let letter of guess) {
-                    const keyElement = document.getElementById(`key-${letter}`);
-                    if (keyElement) {
-                        if (targetWord.includes(letter) && letter === targetWord[guess.indexOf(letter)]) {
-                            keyElement.style.backgroundColor = 'green';
-                        } else if (targetWord.includes(letter)) {
-                            keyElement.style.backgroundColor = 'yellow';
-                        } else {
-                            keyElement.style.backgroundColor = 'grey';
-                        }
+            currentGuess.split('').forEach((letter, index) => {
+                const keyElement = document.getElementById(`key-${letter}`);
+                if (keyElement) {
+                    if (currentGuess[index] === targetWord[index]) {
+                        keyElement.style.backgroundColor = 'green';
+                    } else if (targetWord.includes(letter)) {
+                        keyElement.style.backgroundColor = 'yellow';
+                    } else {
+                        keyElement.style.backgroundColor = 'grey';
                     }
                 }
             });
@@ -297,6 +300,10 @@
             attempts = 0;
             currentGuess = '';
             previousGuesses = [];
+            fetchNewWord();
+            message.textContent = '';
+            answerElement.style.display = 'none';
+            playAgainButton.style.display = 'none';
             document.querySelectorAll('.box').forEach(box => {
                 box.textContent = '';
                 box.classList.remove('correct', 'present', 'absent');
@@ -304,10 +311,6 @@
             document.querySelectorAll('.key').forEach(key => {
                 key.style.backgroundColor = '';
             });
-            fetchNewWord();
-            message.textContent = '';
-            answerElement.style.display = 'none';
-            playAgainButton.style.display = 'none';
         }
 
         function triggerConfetti() {
@@ -317,11 +320,13 @@
                 confetti.classList.add('confetti');
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
                 document.body.appendChild(confetti);
 
                 setTimeout(() => {
                     confetti.remove();
-                }, 2000);
+                }, 4000);
             }
         }
     </script>
