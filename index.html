@@ -238,6 +238,7 @@
             for (let i = 0; i < 5; i++) {
                 if (currentGuess[i] === targetWord[i]) {
                     boxes[attempts * 5 + i].classList.add('correct');
+                    updateKeyboardKeyColor(currentGuess[i], 'correct'); // Update keyboard key color
                 } else {
                     letterCount[targetWord[i]] = (letterCount[targetWord[i]] || 0) + 1;
                 }
@@ -246,9 +247,11 @@
             for (let i = 0; i < 5; i++) {
                 if (currentGuess[i] !== targetWord[i] && targetWord.includes(currentGuess[i]) && letterCount[currentGuess[i]] > 0) {
                     boxes[attempts * 5 + i].classList.add('present');
+                    updateKeyboardKeyColor(currentGuess[i], 'present'); // Update keyboard key color
                     letterCount[currentGuess[i]]--;
                 } else if (!targetWord.includes(currentGuess[i])) {
                     boxes[attempts * 5 + i].classList.add('absent');
+                    updateKeyboardKeyColor(currentGuess[i], 'absent'); // Update keyboard key color
                 }
             }
 
@@ -261,13 +264,28 @@
                 triggerConfetti(); // Trigger confetti on win
             } else if (attempts === maxAttempts) {
                 message.textContent = `Game over! The word was: ${targetWord}`;
-                playAgainButton.style.display = 'block';
-                answerElement.style.display = 'block';
                 targetWordElement.textContent = targetWord;
+                answerElement.style.display = 'block';
+                playAgainButton.style.display = 'block';
             }
 
             currentGuess = '';
             updateInputDisplay();
+        }
+
+        function updateKeyboardKeyColor(letter, status) {
+            const key = document.getElementById(`key-${letter}`);
+            if (!key) return;
+
+            if (status === 'correct') {
+                key.style.backgroundColor = 'green';
+                key.style.color = 'white';
+            } else if (status === 'present') {
+                key.style.backgroundColor = 'yellow';
+            } else if (status === 'absent') {
+                key.style.backgroundColor = 'grey';
+                key.style.color = 'white';
+            }
         }
 
         function resetGame() {
@@ -287,7 +305,7 @@
             keyboardKeys.forEach(letter => {
                 const key = document.getElementById(`key-${letter}`);
                 if (key) {
-                    key.style.backgroundColor = '#e0e0e0';
+                    key.style.backgroundColor = '#e0e0e0'; // Reset keyboard key color
                 }
             });
 
