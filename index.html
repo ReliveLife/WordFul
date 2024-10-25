@@ -83,7 +83,8 @@
             width: 10px;
             height: 10px;
             opacity: 0; /* Initially invisible */
-            animation: fall 4s ease-out forwards;
+            animation: fall 2s ease-out forwards; /* Total fall time is 2 seconds */
+            will-change: transform; /* Improves performance during animation */
         }
         @keyframes fall {
             0% {
@@ -94,7 +95,7 @@
                 opacity: 1; /* Becomes visible as they start falling */
             }
             100% {
-                transform: translateY(100vh) translateX(calc(var(--offset) * 1vw));
+                transform: translateY(100vh) translateX(calc(var(--offset) * 50px));
                 opacity: 0; /* Fade out at the end */
             }
         }
@@ -260,12 +261,12 @@
 
             if (currentGuess === targetWord) {
                 message.textContent = 'Congratulations! You guessed the word!';
-                playAgainButton.style.display = 'block';
                 triggerConfetti(); // Trigger confetti on win
-            } else if (attempts === maxAttempts) {
-                message.textContent = `Game over! The word was: ${targetWord}`;
-                targetWordElement.textContent = targetWord;
                 answerElement.style.display = 'block';
+                playAgainButton.style.display = 'block';
+            } else if (attempts === maxAttempts) {
+                message.textContent = 'Game over! The word was: ' + targetWord;
+                targetWordElement.textContent = targetWord;
                 playAgainButton.style.display = 'block';
             }
 
@@ -275,16 +276,16 @@
 
         function updateKeyboardKeyColor(letter, status) {
             const key = document.getElementById(`key-${letter}`);
-            if (!key) return;
-
-            if (status === 'correct') {
-                key.style.backgroundColor = 'green';
-                key.style.color = 'white';
-            } else if (status === 'present') {
-                key.style.backgroundColor = 'yellow';
-            } else if (status === 'absent') {
-                key.style.backgroundColor = 'grey';
-                key.style.color = 'white';
+            if (key) {
+                if (status === 'correct') {
+                    key.style.backgroundColor = 'green';
+                    key.style.color = 'white';
+                } else if (status === 'present') {
+                    key.style.backgroundColor = 'yellow';
+                } else if (status === 'absent') {
+                    key.style.backgroundColor = 'grey';
+                    key.style.color = 'white';
+                }
             }
         }
 
@@ -296,41 +297,41 @@
             answerElement.style.display = 'none';
             playAgainButton.style.display = 'none';
 
+            // Reset boxes
             const boxes = document.querySelectorAll('.box');
             boxes.forEach(box => {
                 box.classList.remove('correct', 'present', 'absent');
                 box.textContent = '';
             });
 
+            // Reset keyboard colors
             keyboardKeys.forEach(letter => {
                 const key = document.getElementById(`key-${letter}`);
                 if (key) {
-                    key.style.backgroundColor = '#e0e0e0'; // Reset keyboard key color
+                    key.style.backgroundColor = '#e0e0e0'; // Reset to default
+                    key.style.color = 'black'; // Reset text color to black
                 }
             });
 
-            fetchNewWord();
+            fetchNewWord(); // Fetch a new word for the next game
         }
 
         function triggerConfetti() {
-            const colors = ['#FFC700', '#FF1E00', '#00FF1E', '#007BFF', '#FF007B']; // Different confetti colors
+            const colors = ['#ff0', '#0f0', '#00f', '#f00', '#ff00', '#00ff', '#000'];
             for (let i = 0; i < 100; i++) {
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                const delay = Math.random() * 2000; // Random delay up to 2 seconds
-                setTimeout(() => createConfetti(color), delay);
-            }
-        }
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.setProperty('--offset', Math.random() * 2 - 1); // Randomize horizontal offset
 
-        function createConfetti(color) {
-            const confetti = document.createElement('div');
-            confetti.classList.add('confetti');
-            confetti.style.backgroundColor = color; // Set the confetti color
-            confetti.style.left = `${Math.random() * 100}vw`; // Random horizontal position
-            confetti.style.setProperty('--offset', Math.random() * 10 - 5); // Add a slight horizontal sway
-            document.body.appendChild(confetti);
-            setTimeout(() => {
-                confetti.remove(); // Remove the confetti after animation
-            }, 4000);
+                // Set a random animation delay for each confetti piece
+                const delay = Math.random() * 2000; // Random delay between 0 and 2000 ms
+                confetti.style.animationDelay = `${delay}ms`; // Apply the delay
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 4000); // Remove after animation duration
+            }
         }
     </script>
 </body>
