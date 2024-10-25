@@ -166,7 +166,7 @@
         }
 
         function fetchNewWord() {
-            fetch('https://raw.githubusercontent.com/ReliveLife/Wordtorgle/refs/heads/main/Words')
+            fetch('https://raw.githubusercontent.com/ReliveLife/WordFul/refs/heads/main/Words')
                 .then(response => response.text())
                 .then(data => {
                     wordList = data.split("\n").map(word => word.trim().toLowerCase());
